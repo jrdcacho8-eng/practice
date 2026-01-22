@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f9; margin: 0; }
+        .login-container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 300px; text-align: center;}
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        button:hover { background-color: #218838; }
+        
+        #logoutBtn { background-color: #dc3545; display: none; } /* Hidden by default */
+        #logoutBtn:hover { background-color: #c82333; }
+        #dashBtn { background-color: #007bff; display: none; }
+        #dashBtn:hover { background-color: #0069d9; }
+        
+        #message { margin-top: 15px; font-size: 0.9rem; min-height: 1.2rem; }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2 id="formTitle">Log In</h2>
+    
+    <form id="LogInForm">
+        <input type="text" name="username" placeholder="Username" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit" id="loginBtn">Log In</button>
+    </form>
+
+    <button type="button" id="dashBtn" onclick="location.href='/auth/dashboard'">Go To Dashboard</button>
+    <button type="button" id="logoutBtn" onclick="handleLogout()">Log Out</button>
+    
+    <div id="message"></div>
+</div>
+
+<script>
+    const form = document.getElementById('LogInForm');
+    const messageDiv = document.getElementById('message');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const dashBtn = document.getElementById('dashBtn');
+    const formTitle = document.getElementById('formTitle');
+
+    // HANDLE LOGIN
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData);
+
+        try {
+            const response = await fetch('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.text();
+            
+            if (response.ok) {
+                messageDiv.style.color = 'green';
+                messageDiv.textContent = "Login Successful!";
+                
+                // Toggle UI
+                form.style.display = 'none';
+                formTitle.textContent = "Welcome";
+                logoutBtn.style.display = 'block';
+                dashBtn.style.display = 'block';
+            } else {
+                messageDiv.style.color = 'red';
+                messageDiv.textContent = result || "Login failed";
+            }
+        } catch (error) {
+            messageDiv.style.color = 'red';
+            messageDiv.textContent = 'Error connecting to server.';
+        }
+    });
+
+    // HANDLE LOGOUT
+    async function handleLogout() {
+        try {
+            const response = await fetch('/auth/logout', { method: 'POST' });
+            
+            // UI Reset
+            logoutBtn.style.display = 'none';
+            dashBtn.style.display = 'none';
+            form.style.display = 'block';
+            form.reset();
+            formTitle.textContent = "Log In";
+            messageDiv.textContent = "You have been logged out.";
+            messageDiv.style.color = 'black';
+        } catch (error) {
+            messageDiv.textContent = 'Logout failed.';
+        }
+    }
+</script>
+
+</body>
+</html>
